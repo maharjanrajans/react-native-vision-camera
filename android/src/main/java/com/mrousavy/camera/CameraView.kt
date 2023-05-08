@@ -133,10 +133,6 @@ class CameraView(context: Context, private val frameProcessorThread: ExecutorSer
 
 
   fun configureCaptureSession(camera: CameraDevice, previewSurface: Surface) {
-    val cameraCharacteristics = cameraManager.getCameraCharacteristics(camera.id)
-    val previewSize = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!.getOutputSizes(
-      ImageFormat.JPEG).maxByOrNull { it.height * it.width }!!
-
     val captureSessionStateCallback = object : CameraCaptureSession.StateCallback() {
       override fun onConfigured(captureSession: CameraCaptureSession) {
         val captureRequestBuilder = captureSession.device.createCaptureRequest(CameraDevice.TEMPLATE_PREVIEW)
@@ -151,7 +147,7 @@ class CameraView(context: Context, private val frameProcessorThread: ExecutorSer
     }
 
     if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
-      val outputConfigs = mutableListOf<OutputConfiguration>(OutputConfiguration(previewSurface))
+      val outputConfigs = mutableListOf(OutputConfiguration(previewSurface))
 
       val sessionConfig = SessionConfiguration(
         SessionConfiguration.SESSION_REGULAR,

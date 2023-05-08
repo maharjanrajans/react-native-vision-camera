@@ -22,6 +22,7 @@ import com.facebook.react.bridge.ReadableMap
 import com.mrousavy.camera.frameprocessor.Frame
 import com.mrousavy.camera.preview.NativePreviewView
 import com.mrousavy.camera.preview.PreviewView
+import com.mrousavy.camera.preview.SkiaPreviewView
 import com.mrousavy.camera.utils.installHierarchyFitter
 import java.util.concurrent.ExecutorService
 
@@ -64,33 +65,27 @@ class CameraView(context: Context, private val frameProcessorThread: ExecutorSer
 
   private val cameraHandler = Handler(Looper.getMainLooper())
   private val cameraManager: CameraManager = context.getSystemService(Context.CAMERA_SERVICE) as CameraManager
-  private var previewView: PreviewView? = null
+  private var previewView: SkiaPreviewView? = null
   private var imageReader: ImageReader? = null
 
   // region LIFECYCLE
   init {
     mHybridData = initHybrid()
 
+    this.installHierarchyFitter()
     setupPreviewView()
   }
 
   fun setupPreviewView() {
     if (previewView != null) removeView(previewView)
 
-    previewView = when (previewType) {
-      "native" -> NativePreviewView(context)
-      "skia" -> TODO("Skia View!")
-      else -> throw InvalidTypeScriptUnionError("previewType", previewType)
-    }
+    previewView = SkiaPreviewView(context)
 
     previewView!!.layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
-    previewView!!.installHierarchyFitter()
     addView(previewView!!)
-    previewView!!.addOnSurfaceChangedListener() { surface ->
-      if (surface != null) {
-        configureSession(surface)
-      }
-    }
+    postDelayed({
+      configureSession(previewView!!.surface!!)
+    }, 3000)
   }
 
   fun update(changedProps: ArrayList<String>) {
@@ -141,8 +136,6 @@ class CameraView(context: Context, private val frameProcessorThread: ExecutorSer
     val cameraCharacteristics = cameraManager.getCameraCharacteristics(camera.id)
     val previewSize = cameraCharacteristics.get(CameraCharacteristics.SCALER_STREAM_CONFIGURATION_MAP)!!.getOutputSizes(
       ImageFormat.JPEG).maxByOrNull { it.height * it.width }!!
-
-    imageReader = ImageReader.newInstance(previewSize.width, previewSize.height, ImageFormat.YUV_420_888, 1)
 
     val captureSessionStateCallback = object : CameraCaptureSession.StateCallback() {
       override fun onConfigured(captureSession: CameraCaptureSession) {

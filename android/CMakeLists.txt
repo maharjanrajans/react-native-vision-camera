@@ -19,6 +19,8 @@ find_library(LOG_LIB log)
 
 
 set(RNSKIA_PATH ${NODE_MODULES_DIR}/@shopify/react-native-skia)
+variable_watch(${RNSKIA_PATH})
+
 if(EXISTS ${RNSKIA_PATH})
     find_package(shopify_react-native-skia REQUIRED CONFIG)
     set(SKIA_PACKAGE shopify_react-native-skia::rnskia)
